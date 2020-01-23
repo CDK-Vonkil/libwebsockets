@@ -157,7 +157,7 @@ if(ESP_PLATFORM)
 	message(STATUS "ESP-IDF enabled")
 	set(LWS_WITH_ESP32 ON)
 else()
-	set(LWS_WITH_ESP32_HELPER OFF)
+#	set(LWS_WITH_ESP32_HELPER OFF)
 endif()
 
 if (LWS_WITH_ESP32)
@@ -925,7 +925,7 @@ CHECK_INCLUDE_FILES("stdlib.h;stdarg.h;string.h;float.h" STDC_HEADERS)
 
 CHECK_C_SOURCE_COMPILES("#include <stdint.h> 
 	int main(void) {
-		intptr_t test = 1;
+		intptr_t test __attribute__((unused)) = 1;
 		return 0;
 	}" LWS_HAS_INTPTR_T)
 

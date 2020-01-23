@@ -1371,3 +1371,28 @@ uint16_t lws_esp32_sine_interp(int n)
         return (sine_lu(n >> 4) * (15 - (n & 15)) +
                 sine_lu((n >> 4) + 1) * (n & 15)) / 15;
 }
+
+void 
+lws_esp32_establish_romfs_partition(struct lws_context *    context,
+                                    esp_partition_type_t    typ, 
+                                    esp_partition_subtype_t subtyp, 
+                                    const char *            label)
+{
+  const esp_partition_t * p = esp_partition_find_first(typ, subtyp, label);
+  if (p) {
+    lws_esp32_romfs = (romfs_t) p->address;
+    if (romfs_mount_check(lws_esp32_romfs)) {
+      lwsl_info("valid ROMFS mounted at flash offset 0x%x\n", p->address);
+      /* set the lws vfs to use our romfs */
+#if defined(LWS_WITH_FILE_OPS)
+      lws_set_fops(context, &fops);
+#endif
+    }
+    else {
+      lwsl_err("mount error on ROMFS at %p 0x%x\n", lws_esp32_romfs, p->address);
+    }
+  }
+  else {
+    lwsl_err("ROMFS partition type=0x%x, subtype=0x%x not found", typ, subtyp);
+  }
+}

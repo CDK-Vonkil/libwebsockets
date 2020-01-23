@@ -150,4 +150,8 @@ extern uint16_t lws_esp32_sine_interp(int n);
 /* required in external code by esp32 plat (may just return if no leds) */
 extern void lws_esp32_leds_timer_cb(TimerHandle_t th);
 
-#endif /* LWS_AMAZON_RTOS */
+extern void 
+lws_esp32_establish_romfs_partition(struct lws_context *    context,
+                                    esp_partition_type_t    typ, 
+                                    esp_partition_subtype_t subtyp, 
+                                    const char *            label);

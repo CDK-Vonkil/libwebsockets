@@ -69,6 +69,7 @@ struct pollfd {
 #include "driver/gpio.h"
 #include "esp_spi_flash.h"
 #include "freertos/timers.h"
+#include "lwip/sockets.h"
 #endif /* LWS_AMAZON_RTOS */
 
 #if !defined(CONFIG_FREERTOS_HZ)

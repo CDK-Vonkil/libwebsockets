@@ -89,24 +89,23 @@ endif
 	cat $(F)/build/json-buildinfo >> build/manifest.json
 	echo -n -e "\r\n}\r\n" >> build/manifest.json
 
-all: $(LWS_BUILD_PATH)/pack.img
+#all: $(LWS_BUILD_PATH)/pack.img
 
-flash: $(LWS_BUILD_PATH)/pack.img
+#flash: $(LWS_BUILD_PATH)/pack.img
 
-lws_flash_ota: $(LWS_BUILD_PATH)/pack.img
-	$(IDF_PATH)/components/esptool_py/esptool/esptool.py \
-		--chip esp32 \
-		--port $(ESPPORT) \
-		--baud $(CONFIG_ESPTOOLPY_BAUD) \
-		write_flash 0x120000 $(LWS_BUILD_PATH)/$(PROJECT_NAME).bin
+#lws_flash_ota: $(LWS_BUILD_PATH)/pack.img
+#	$(IDF_PATH)/components/esptool_py/esptool/esptool.py \
+#		--chip esp32 \
+#		--port $(ESPPORT) \
+#		--baud $(CONFIG_ESPTOOLPY_BAUD) \
+#		write_flash 0x120000 $(LWS_BUILD_PATH)/$(PROJECT_NAME).bin
 
-lws_erase_ota:
-	$(IDF_PATH)/components/esptool_py/esptool/esptool.py \
-	        --chip esp32 \
-	        --port $(ESPPORT) \
-	        --baud $(CONFIG_ESPTOOLPY_BAUD) \
-	        erase_region 0x120000 0x2e0000
-
+#lws_erase_ota:
+#	$(IDF_PATH)/components/esptool_py/esptool/esptool.py \
+#	        --chip esp32 \
+#	        --port $(ESPPORT) \
+#	        --baud $(CONFIG_ESPTOOLPY_BAUD) \
+#	        erase_region 0x120000 0x2e0000
 
 export A
 export F

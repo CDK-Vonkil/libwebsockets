@@ -27,6 +27,9 @@
 lws_async_dns_server_check_t
 lws_plat_asyncdns_init(struct lws_context *context, lws_sockaddr46 *sa46)
 {
+#if defined(LWS_WITH_ESP32)
+  return LADNS_CONF_SERVER_SAME; // FIXME: TODO
+#else
 	uint32_t ipv4;
 	lws_async_dns_server_check_t s = LADNS_CONF_SERVER_CHANGED;
 
@@ -39,4 +42,5 @@ lws_plat_asyncdns_init(struct lws_context *context, lws_sockaddr46 *sa46)
 	sa46->sa4.sin_addr.s_addr = ipv4;
 
 	return s;
+#endif
 }

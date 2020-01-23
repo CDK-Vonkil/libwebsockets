@@ -16,9 +16,17 @@ endif
 
 # -DNDEBUG=1 after cflags stops debug etc being built
 .PHONY: build
-build:
-	cd $(COMPONENT_BUILD_DIR) ; \
-	echo "doing lws cmake" ; \
+build: $(COMPONENT_BUILD_DIR)/liblibwebsockets.a 
+
+${COMPONENT_BUILD_DIR}/liblibwebsockets.a : $(COMPONENT_BUILD_DIR)/lib/libwebsockets.a
+	cp $< $@
+
+${COMPONENT_BUILD_DIR}/lib/libwebsockets.a : $(COMPONENT_BUILD_DIR)/Makefile
+	$(MAKE) -C $(COMPONENT_BUILD_DIR)
+
+$(COMPONENT_BUILD_DIR)/Makefile : 
+	echo "doing lws cmake"
+	cd $(COMPONENT_BUILD_DIR) && \
 	cmake $(COMPONENT_PATH)  -DLWS_C_FLAGS="$(CFLAGS) -DNDEBUG=1" \
 		-DIDF_PATH=$(IDF_PATH) \
 		-DCROSS_PATH=$(CROSS_PATH) \
@@ -34,10 +42,13 @@ build:
 		-DLWS_WITH_ZIP_FOPS=1 \
 		-DZLIB_LIBRARY=$(BUILD_DIR_BASE)/zlib/libzlib.a \
 		-DZLIB_INCLUDE_DIR=$(COMPONENT_PATH)/../zlib \
-		-DLWS_WITH_ESP32=1 \
-		$(MSYS_FLAGS) ; \
-	make && \
-	cp ${COMPONENT_BUILD_DIR}/lib/libwebsockets.a ${COMPONENT_BUILD_DIR}/liblibwebsockets.a
+		-DLWS_WITH_ESP32=1 -DLWS_WITH_ESP32_HELPER=1 \
+		-DCMAKE_BUILD_TYPE=DEBUG \
+		$(MSYS_FLAGS)
+# HACK ALERT! -- fixes up a bogative semicolon, no time to determine root cause
+	sed -i 's/\-O2\;\-O2/\-O2/' $(COMPONENT_BUILD_DIR)/CMakeFiles/websockets.dir/flags.make
+# HACK ALERT! -- fixes up a bogative use of unsupported compiler option
+	sed -i 's/\-Wno\-frame\-address//' $(COMPONENT_BUILD_DIR)/CMakeFiles/websockets.dir/flags.make
 
 clean: myclean
 
