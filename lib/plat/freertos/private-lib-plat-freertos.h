@@ -24,7 +24,7 @@
  * Included from lib/private-lib-core.h if LWS_PLAT_FREERTOS
  */
 
-#define MSG_NOSIGNAL 0
+//#define MSG_NOSIGNAL 0
 #define SOMAXCONN 3
 
 #if defined(LWS_AMAZON_RTOS)

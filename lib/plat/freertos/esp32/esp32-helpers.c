@@ -32,6 +32,8 @@
 #include "soc/ledc_reg.h"
 #include "driver/ledc.h"
 
+#define SUPPORT_WLAN 0
+
 struct lws_esp32 lws_esp32 = {
 	.model = CONFIG_LWS_MODEL_NAME,
 	.serial = "unknown",
@@ -98,13 +100,17 @@ static const char *gapss_str[] = {
 };
 
 static romfs_t lws_esp32_romfs;
-static TimerHandle_t leds_timer, scan_timer, debounce_timer, association_timer
+static TimerHandle_t scan_timer, debounce_timer
+#if SUPPORT_WLAN
 #if !defined(CONFIG_LWS_IS_FACTORY_APPLICATION)
 , mdns_timer
 #endif
+, leds_timer
+, association_timer
+#endif
 ;
 static enum lws_gapss gapss = LWS_GAPSS_INITIAL;
-#if !defined(CONFIG_LWS_IS_FACTORY_APPLICATION)
+#if !defined(CONFIG_LWS_IS_FACTORY_APPLICATION) && SUPPORT_WLAN
 static mdns_result_t *mdns_results_head;
 #endif
 
@@ -144,10 +150,12 @@ uint32_t lws_esp32_get_reboot_type(void)
 	return val;
 }
 
+#if SUPPORT_WLAN
 static void render_ip(char *dest, int len, uint8_t *ip)
 {
-	snprintf(dest, len, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
+  (void) snprintf(dest, len, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
 }
+#endif
 
 void lws_esp32_restart_guided(uint32_t type)
 {
@@ -180,7 +188,9 @@ static wifi_scan_config_t scan_config = {
 };
 
 static char scan_ongoing = 0, scan_timer_exists = 0;
+#if SUPPORT_WLAN
 static int try_slot = -1;
+#endif
 
 static wifi_config_t config = {
 	.ap = {
@@ -203,6 +213,7 @@ static void lws_esp32_scan_timer_cb(TimerHandle_t th)
 		lwsl_err("scan start failed %d\n", n);
 }
 
+#if SUPPORT_WLAN
 static void lws_esp32_assoc_timer_cb(TimerHandle_t th)
 {
 	int n;
@@ -223,6 +234,7 @@ static void lws_esp32_assoc_timer_cb(TimerHandle_t th)
 	if (n != ESP_OK)
 		lwsl_err("scan start failed %d\n", n);
 }
+#endif
 
 
 #if !defined(CONFIG_LWS_IS_FACTORY_APPLICATION)
@@ -244,6 +256,7 @@ void lws_group_member_event_call(int e, void *p)
 	lws_group_member_event(e, p);
 }
 
+#if SUPPORT_WLAN
 static int
 get_txt_param(const mdns_result_t *mr, const char *param, char *result, int len)
 {
@@ -261,7 +274,9 @@ get_txt_param(const mdns_result_t *mr, const char *param, char *result, int len)
 
 	return 0;
 }
+#endif
 
+#if SUPPORT_WLAN
 static void lws_esp32_mdns_timer_cb(TimerHandle_t th)
 {
 	uint64_t now = lws_now_usecs();
@@ -352,6 +367,7 @@ next:
 	xTimerStart(mdns_timer, 0);
 }
 #endif
+#endif
 
 void __attribute__(( weak ))
 lws_esp32_button(int down)
@@ -365,6 +381,7 @@ gpio_irq(void *arg)
 	xTimerStart(debounce_timer, 0);
 }
 
+#if SUPPORT_WLAN
 static void lws_esp32_debounce_timer_cb(TimerHandle_t th)
 {
 	if (lws_esp32.button_is_down)
@@ -376,6 +393,7 @@ static void lws_esp32_debounce_timer_cb(TimerHandle_t th)
 
 	lws_esp32_button(lws_esp32.button_is_down);
 }
+#endif
 
 
 static int
@@ -399,7 +417,7 @@ start_scan()
 }
 
 
-
+#if SUPPORT_WLAN
 static void
 end_scan()
 {
@@ -483,13 +501,16 @@ passthru:
 					lws_esp32.scan_consumer_arg);
 
 }
+#endif
 
+#if SUPPORT_WLAN
 static void
 lws_set_genled(int n)
 {
 	lws_esp32.genled_t = lws_now_usecs();
 	lws_esp32.genled = n;
 }
+#endif
 
 int
 lws_esp32_leds_network_indication(void)
@@ -540,6 +561,7 @@ lws_esp32_leds_network_indication(void)
 	return (n * fadein) / 100;
 }
 
+#if SUPPORT_WLAN
 esp_err_t lws_esp32_event_passthru(void *ctx, system_event_t *event)
 {
 #if !defined(CONFIG_LWS_IS_FACTORY_APPLICATION)
@@ -697,13 +719,13 @@ esp_err_t lws_esp32_event_passthru(void *ctx, system_event_t *event)
 		lwsl_notice("SYSTEM_EVENT_SCAN_DONE\n");
 		end_scan();
 		break;
-
 	default:
 		break;
 	}
 
 	return ESP_OK;
 }
+#endif
 
 #if defined(LWS_WITH_FILE_OPS)
 static lws_fop_fd_t IRAM_ATTR
@@ -799,6 +821,7 @@ static const struct lws_plat_file_ops fops = {
 };
 #endif
 
+#if SUPPORT_WLAN
 int
 lws_esp32_wlan_nvs_get(int retry)
 {
@@ -869,8 +892,9 @@ lws_esp32_wlan_nvs_get(int retry)
 
 	return lws_esp32_force_ap;
 }
+#endif
 
-
+#if SUPPORT_WLAN
 void
 lws_esp32_wlan_config(void)
 {
@@ -929,6 +953,7 @@ lws_esp32_wlan_config(void)
 	lws_esp32_wlan_nvs_get(0);
 	tcpip_adapter_init();
 }
+#endif
 
 void
 lws_esp32_wlan_start_ap(void)
